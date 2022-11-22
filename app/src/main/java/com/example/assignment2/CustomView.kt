@@ -18,6 +18,25 @@ class CustomView (context: Context?) : View(context) {
     private var _context: Context? = context
     private var _attribs: AttributeSet? = null
 
+    private val bitmaps = mutableMapOf<Int, Bitmap>()
+    private val imgIDs = setOf(
+        R.drawable.gold_camel,
+        R.drawable.gold_elephant,
+        R.drawable.gold_cat,
+        R.drawable.gold_dog,
+        R.drawable.gold_horse,
+        R.drawable.gold_rabbit,
+        R.drawable.silver_camel,
+        R.drawable.silver_elephant,
+        R.drawable.silver_cat,
+        R.drawable.silver_dog,
+        R.drawable.silver_horse,
+        R.drawable.silver_rabbit,)
+
+    init {
+        loadBitmaps()
+    }
+
 
     constructor(context: Context?, attribs: AttributeSet?) : this(context) {
         _attribs = attribs
@@ -41,8 +60,29 @@ class CustomView (context: Context?) : View(context) {
         highetY = (height - ArimaaBoard) / 2f
 
         drawArimaaBoard(canvas!!)
+        drawPieces(canvas)
     }
 
+
+    private fun drawPieces(canvas: Canvas) {
+        val arimaaGame = ArimaaGame
+        arimaaGame.reset()
+        for (row in 0 until 8) {
+            for (col in 0 until 8) {
+                val piece = arimaaGame.pieceAt(col, row)
+                if (piece != null) {
+                    drawPieceAt(canvas, col, row, piece.resID)
+                }
+
+            }
+        }}
+
+    private fun drawPieceAt(canvas: Canvas, col: Int, row: Int, resID: Int) =
+        canvas.drawBitmap(bitmaps[resID]!!, null, RectF(widthX + col * sequareSize,highetY + (7 - row) * sequareSize,widthX + (col + 1) * sequareSize,highetY + ((7 - row) + 1) * sequareSize), paint)
+    private fun loadBitmaps() =
+        imgIDs.forEach { imgID ->
+            bitmaps[imgID] = BitmapFactory.decodeResource(resources, imgID)
+        }
 
     private fun drawArimaaBoard(canvas: Canvas) {
         for (row in 0 until 8)
