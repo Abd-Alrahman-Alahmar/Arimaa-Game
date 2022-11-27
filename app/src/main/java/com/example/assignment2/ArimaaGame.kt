@@ -2,7 +2,8 @@ package com.example.assignment2
 
 object ArimaaGame {
     private var piecesBox = mutableSetOf<ArimaaPiece>()
-
+    private var GoldPlayer : Player = Player.Gold
+    var numberOfMove = 0
     init {
         reset()
     }
@@ -15,6 +16,55 @@ object ArimaaGame {
         piecesBox.add(piece)
     }
 
+    private fun canFirstLineMove(fromCol: Int, fromRow: Int, toCol: Int, toRow: Int): Boolean {
+
+        return toCol == fromCol + 1 && toRow == fromRow ||  toCol == fromCol - 1 && toRow == fromRow ||
+               toRow == fromRow + 1 && toCol == fromCol || toRow == fromRow - 1 && toCol == fromCol
+    }
+
+    private fun canRabbitMove(fromCol: Int, fromRow: Int, toCol: Int, toRow: Int): Boolean {
+       return ( toCol == fromCol + 1 && toRow == fromRow ||  toCol == fromCol - 1 && toRow == fromRow ||
+                toRow == fromRow + 1 && toCol == fromCol)
+
+
+    }
+
+     fun movePiece(fromCol: Int, fromRow: Int, toCol: Int, toRow: Int) {
+
+         val movingPiece = pieceAt(fromCol, fromRow) ?: return
+             if (fromCol == toCol && fromRow == toRow || movingPiece.player != GoldPlayer ||
+                 !canFirstLineMove(fromCol, fromRow, toCol, toRow) && movingPiece.pieceType != PieceType.Rabbit ||
+                 movingPiece.pieceType == PieceType.Rabbit && !canRabbitMove(fromCol, fromRow, toCol,toRow) ) return
+
+
+// if move piece on same color piece then don't accept it
+             pieceAt(toCol, toRow)?.let {
+
+                 if (it.player == movingPiece.player) {
+                     return
+                 }
+                 piecesBox.remove(it)
+
+             }
+
+//when piece capture another one then delete it
+            if( piecesBox.remove(movingPiece) && piecesBox.add (
+                    ArimaaPiece(
+                        toCol,
+                        toRow,
+                        movingPiece.player,
+                        movingPiece.pieceType,
+                        movingPiece.resID
+                    )
+                ))
+                 numberOfMove++
+                 if (numberOfMove ==4) {GoldPlayer = Player.Silver}
+                 else if (numberOfMove == 8) {GoldPlayer = Player.Gold
+                 numberOfMove = 0}
+
+                 println("this is numberofmove value " + numberOfMove)
+
+}
 
     fun reset() {
         clear()
@@ -39,7 +89,6 @@ object ArimaaGame {
         addPiece(ArimaaPiece(4, 1, Player.Gold, PieceType.Elephant, R.drawable.gold_elephant))
         addPiece(ArimaaPiece(4, 6, Player.Silver, PieceType.Elephant, R.drawable.silver_elephant))
     }
-
 
      fun pieceAt(col: Int, row: Int): ArimaaPiece? {
         for (piece in piecesBox) {

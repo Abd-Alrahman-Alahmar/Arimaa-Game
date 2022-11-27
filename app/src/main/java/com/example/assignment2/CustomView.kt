@@ -3,10 +3,11 @@ package com.example.assignment2
 import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
+import android.view.MotionEvent
 import android.view.View
 import kotlin.math.min
 
-class CustomView (context: Context?) : View(context) {
+class CustomView (context: Context?, attrs: AttributeSet?) : View(context, attrs) {
 
     private val scale = 1.0f
     private var widthX = 20f
@@ -18,6 +19,13 @@ class CustomView (context: Context?) : View(context) {
     private var _context: Context? = context
     private var _attribs: AttributeSet? = null
 
+    var arimaaDelegate: ArimaaDelegate? = null
+    private var movingPieceBitmap: Bitmap? = null
+    private var movingPiece: ArimaaPiece? = null
+    private var fromCol: Int = -1
+    private var fromRow: Int = -1
+    private var movingPieceX = -1f
+    private var movingPieceY = -1f
     private val bitmaps = mutableMapOf<Int, Bitmap>()
     private val imgIDs = setOf(
         R.drawable.gold_camel,
@@ -38,9 +46,9 @@ class CustomView (context: Context?) : View(context) {
     }
 
 
-    constructor(context: Context?, attribs: AttributeSet?) : this(context) {
-        _attribs = attribs
-    }
+//    constructor(context: Context?, attribs: AttributeSet?) : this(context) {
+//        _attribs = attribs
+//    }
 
 
 
@@ -64,17 +72,50 @@ class CustomView (context: Context?) : View(context) {
     }
 
 
+        override fun onTouchEvent(event: MotionEvent?): Boolean {
+        event ?: return false
+
+        when (event.action) {
+            MotionEvent.ACTION_DOWN -> {
+                fromCol = ((event.x - widthX) / sequareSize).toInt()
+                fromRow = 7 - ((event.y - highetY) / sequareSize).toInt()
+
+                    ArimaaGame.pieceAt(fromCol, fromRow)?.let {
+                    movingPiece = it
+                    movingPieceBitmap = bitmaps[it.resID]
+                }
+            }
+            MotionEvent.ACTION_MOVE -> {
+                movingPieceX = event.x
+                movingPieceY = event.y
+                invalidate()
+            }
+            MotionEvent.ACTION_UP -> {
+                val col = ((event.x - widthX) / sequareSize).toInt()
+                val row = 7 - ((event.y - highetY) / sequareSize).toInt()
+              //  if (fromCol != col || fromRow != row) {
+                    arimaaDelegate?.movePiece(fromCol, fromRow, col, row)
+            //    }
+                movingPiece = null
+                movingPieceBitmap = null
+                invalidate()
+            }
+        }
+        return true
+    }
+
+
     private fun drawPieces(canvas: Canvas) {
-        val arimaaGame = ArimaaGame
-        arimaaGame.reset()
         for (row in 0 until 8) {
             for (col in 0 until 8) {
-                val piece = arimaaGame.pieceAt(col, row)
-                if (piece != null) {
-                    drawPieceAt(canvas, col, row, piece.resID)
+                 arimaaDelegate?.pieceAt(col, row)?.let {
+                     if (it != movingPiece) {
+                     drawPieceAt(canvas, col, row, it.resID)}
+                 }
                 }
-
-            }
+                movingPieceBitmap?.let {
+                    canvas.drawBitmap(it, null, RectF(movingPieceX - sequareSize/2, movingPieceY - sequareSize/2,movingPieceX + sequareSize/2,movingPieceY + sequareSize/2), paint)
+                }
         }}
 
     private fun drawPieceAt(canvas: Canvas, col: Int, row: Int, resID: Int) =
