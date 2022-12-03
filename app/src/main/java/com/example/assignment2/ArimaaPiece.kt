@@ -4,6 +4,7 @@ import kotlin.math.abs
 
 class ArimaaPiece(val goldenPlayer: Boolean, val pieceType: PieceType, val resID: Int){
 
+    val rank: Int get() = pieceType.let { return it.rank }
     override fun equals(deepPiece: Any?): Boolean {
         if (this === deepPiece) return true
         if (deepPiece !is ArimaaPiece) return false
@@ -12,8 +13,8 @@ class ArimaaPiece(val goldenPlayer: Boolean, val pieceType: PieceType, val resID
 
     override fun hashCode(): Int {
         var result = goldenPlayer.hashCode()
-        result = 31 * result + (pieceType.hashCode() ?: 0)
-//        result = 31 * result + power
+        result = 31 * result + (pieceType.hashCode())
+        result = 31 * result + rank
         return result
     }
 

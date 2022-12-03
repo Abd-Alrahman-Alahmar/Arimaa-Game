@@ -5,7 +5,7 @@ import java.util.ArrayList
 
 class ArimaaGame(private val arimaaDelegate: ArimaaDelegate) {
 
-    private var selectedPiece: ArimaaPiece? = null
+    private lateinit var currentPiece: ArimaaPiece
     val arimaaBoard: ArimaaBoard = ArimaaBoard()
     private var GoldPlayer = true
     var numberOfMove = 4
@@ -72,11 +72,15 @@ class ArimaaGame(private val arimaaDelegate: ArimaaDelegate) {
                 arimaaDelegate.onError("You cannot move this piece. It's not your turn")
                 return
             }
+            if (goldenPiece && Immobile(arimaaPiece, fromRow, fromCol)) {
+                arimaaDelegate.onError("The selected piece is immobile.")
+                return
+           }
 
             val allowedmoves = legalmoves
             if (allowedmoves.isNotEmpty()) {
                 isSelected = true
-                selectedPiece = arimaaPiece
+                currentPiece = arimaaPiece
                 arimaaDelegate.updateBoard()
             } else {
                 arimaaDelegate.onError("No possible moves are available for selected piece.")
@@ -92,7 +96,7 @@ class ArimaaGame(private val arimaaDelegate: ArimaaDelegate) {
                 if (moveError == null) {
                     moveArimaaPiece(fromRow, fromCol, toRow, toCol)
                     numberOfMove--
-                    if (arimaaPiece?.goldenPlayer != GoldPlayer) {
+                    if (arimaaPiece.goldenPlayer != GoldPlayer) {
                         val push = Push(arimaaPiece)
                         if (push.size == 1) {
                             val push = push[0]
@@ -128,25 +132,26 @@ class ArimaaGame(private val arimaaDelegate: ArimaaDelegate) {
     }
 
 
-    private fun Immobile(selectedPiece: ArimaaPiece, Row: Int, Col: Int): Boolean {
-        var Opponent = false
+    private fun Immobile(currentPiece: ArimaaPiece, Row: Int, Col: Int): Boolean {
+        var canMove = false
         for (point in highlightPoint(Row, Col)) {
-            val neighbor = getArimaaPiece(point.x, point.y) ?: continue
-            if (selectedPiece.goldenPlayer == neighbor.goldenPlayer) return false
+            val nearPiece = getArimaaPiece(point.x, point.y) ?: continue
+            if (currentPiece.goldenPlayer == nearPiece.goldenPlayer) return false
+            if (nearPiece.rank > currentPiece.rank) canMove = true
 
         }
-        return Opponent
+        return canMove
     }
 
-    fun Push(selectedPiece: ArimaaPiece?): List<Point> {
+    fun Push(currentPiece: ArimaaPiece?): List<Point> {
         val push: MutableList<Point> = ArrayList()
-        if (legalMove(selectedPiece, fromRow, fromCol).isEmpty()) {
+        if (legalMove(currentPiece, fromRow, fromCol).isEmpty()) {
             return push
         }
         for (point in highlightPoints) {
             val highlight = getArimaaPiece(point.x, point.y) ?: continue
             if (Immobile(highlight, point.x, point.y)) continue
-            if (highlight.goldenPlayer != selectedPiece!!.goldenPlayer
+            if (highlight.goldenPlayer != currentPiece!!.goldenPlayer
 
             ) {
                 push.add(point)
@@ -155,11 +160,11 @@ class ArimaaGame(private val arimaaDelegate: ArimaaDelegate) {
         return push
     }
 
-//    fun Pull(selectedPiece: ArimaaPiece?): List<Point> {
+//    fun Pull(currentPiece: ArimaaPiece?): List<Point> {
 //        val pull: MutableList<Point> = ArrayList()
 //        for (point in highlightPoints) {
 //            val neighbor = getArimaaPiece(point.x, point.y) ?: continue
-//            if (neighbor.goldenPlayer != selectedPiece!!.goldenPlayer
+//            if (neighbor.goldenPlayer != currentPiece!!.goldenPlayer
 //
 //            ) {
 //                pull.add(point)
