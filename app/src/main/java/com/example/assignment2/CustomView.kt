@@ -124,7 +124,6 @@ class CustomView (context: Context?, attrs: AttributeSet?) : View(context, attrs
             for (col in 0 until 8) {
 
                 val arimaaPiece = arimaaGame!!.arimaaBoard.getArimaaPieces()[row]?.get(col) ?: continue
-
                     drawPieceAt(canvas,row,col,arimaaPiece.resID)
         }
         }}

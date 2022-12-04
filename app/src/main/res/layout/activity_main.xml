@@ -54,6 +54,15 @@
         android:layout_margin="12dp"
         android:text="Reset Game"/>
 
+        <ImageButton
+            android:id="@+id/undo_button"
+            android:layout_width="40dp"
+            android:layout_height="35dp"
+            android:src="@drawable/undo"
+            android:background="@color/dark_brown"/>
+
+
+
     <Button
         android:id="@+id/finish_button"
         android:layout_width="wrap_content"

@@ -8,6 +8,11 @@ class ArimaaBoard {
 
     fun getArimaaPieces(): Array<Array<ArimaaPiece?>?> = arimaaPieces
 
+    fun undoArimaaPieces(arimaaPieces: Array<Array<ArimaaPiece?>?>?) {
+        this.arimaaPieces = DeepCopyArimaaPieces(arimaaPieces)
+    }
+
+
 
     fun State(): BoardState = BoardState(DeepCopyArimaaPieces(arimaaPieces), DeepCopyTrap(trap))
 
@@ -24,6 +29,10 @@ class ArimaaBoard {
     }
 
     fun TrapPosition(): MutableList<ArimaaPiece?> = trap
+
+    fun undoTrap(trap: List<ArimaaPiece?>?) {
+        this.trap = DeepCopyTrap(trap)
+    }
 
     private fun DeepCopyTrap(trap: List<ArimaaPiece?>?): MutableList<ArimaaPiece?> {
         val copy: MutableList<ArimaaPiece?> = ArrayList()

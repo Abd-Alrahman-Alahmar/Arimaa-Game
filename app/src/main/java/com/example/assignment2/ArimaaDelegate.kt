@@ -10,6 +10,8 @@ interface ArimaaDelegate {
 
     fun updateBoard()
 
+    fun AlertBeforePull()
+
     fun endGame(goldPlayer: Boolean)
 
 }
