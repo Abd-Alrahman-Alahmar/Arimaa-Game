@@ -8,6 +8,16 @@
     android:gravity="center"
     tools:context=".MainActivity">
 
+    <TextView
+        android:id="@+id/Winner"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="5dp"
+        android:textSize="25dp"
+        android:textColor="@color/dark_brown"
+        android:layout_marginBottom="10dp"
+        />
+
     <com.example.assignment2.CustomView
         android:id="@+id/custom_view"
         android:layout_width="match_parent"

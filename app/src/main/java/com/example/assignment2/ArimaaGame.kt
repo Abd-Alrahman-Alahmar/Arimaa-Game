@@ -8,26 +8,31 @@ class ArimaaGame(private val arimaaDelegate: ArimaaDelegate) {
     private lateinit var currentPiece: ArimaaPiece
     val arimaaBoard: ArimaaBoard = ArimaaBoard()
     private var GoldPlayer = true
-    var numberOfMove = 4
+    private var numberOfMove = 4
     var fromRow = 0
     var fromCol = 0
     var isSelected = false
+    private var endGame = false
+    private var checkBeforePush = false
     private val boardStates: MutableList<BoardState?> = ArrayList()
 
 
+    init {
+        boardStates.add(arimaaBoard.State())
+    }
 
     private val highlightPoints: List<Point>
     private get() = highlightPoint(fromRow, fromCol)
 
     private fun highlightPoint(fromRow: Int, fromCol: Int): List<Point> {
         val highlightPoints: MutableList<Point> = ArrayList()
-        if (fromCol != 0)
+        if (fromCol != 0 && !endGame)
             highlightPoints.add(Point(fromRow, fromCol - 1))
-        if (fromCol != 7)
+        if (fromCol != 7 && !endGame)
             highlightPoints.add(Point(fromRow, fromCol + 1))
-        if (fromRow != 0)
+        if (fromRow != 0 && !endGame)
             highlightPoints.add(Point(fromRow - 1, fromCol))
-        if (fromRow != 7)
+        if (fromRow != 7 && !endGame)
             highlightPoints.add(Point(fromRow + 1, fromCol))
         return highlightPoints
     }
@@ -59,6 +64,9 @@ class ArimaaGame(private val arimaaDelegate: ArimaaDelegate) {
     fun onPieceClick(toRow: Int, toCol: Int) {
         var arimaaPiece = getArimaaPiece(toRow,toCol)
 
+        if (checkBeforePush) {checkBeforePush(toRow, toCol)
+            return }
+
         if (!isSelected) {
             if (arimaaPiece == null) return
             if (numberOfMove == 0) {
@@ -69,7 +77,7 @@ class ArimaaGame(private val arimaaDelegate: ArimaaDelegate) {
             fromCol = toCol
             val goldenPiece = arimaaPiece.goldenPlayer == GoldPlayer
             if (!goldenPiece && (numberOfMove < 2 || Push(arimaaPiece).isEmpty())) {
-                arimaaDelegate.onError("You cannot move this piece. It's not your turn")
+                arimaaDelegate.onError("You cannot move opponent piece.")
                 return
             }
             if (goldenPiece && Immobile(arimaaPiece, fromRow, fromCol)) {
@@ -93,15 +101,19 @@ class ArimaaGame(private val arimaaDelegate: ArimaaDelegate) {
                     fromRow, fromCol, toRow, toCol,
                     GoldPlayer
                 )
-                if (moveError == null) {
+                if (moveError == null && !endGame) {
                     moveArimaaPiece(fromRow, fromCol, toRow, toCol)
                     numberOfMove--
                     if (arimaaPiece.goldenPlayer != GoldPlayer) {
                         val push = Push(arimaaPiece)
                         if (push.size == 1) {
-                            val push = push[0]
-                            moveArimaaPiece(push.x, push.y, fromRow, fromCol)
+                            val Push = push[0]
+                            moveArimaaPiece(Push.x, Push.y, fromRow, fromCol)
                             numberOfMove--
+                        }
+                        else {
+                            checkBeforePush = true
+                            arimaaDelegate.showMessage("Select your piece to use for pushing.")
                         }
                     }
 //                     else if (numberOfMove > 0) {
@@ -119,17 +131,48 @@ class ArimaaGame(private val arimaaDelegate: ArimaaDelegate) {
             isSelected = false
             arimaaDelegate.updateBoard()
         }
+
+
+        if(endGame) {
+            arimaaDelegate.onError("Game Over, Reset The Game or Quit ")
+        }
     }
 
 
     private fun moveArimaaPiece(fromRow: Int, fromCol: Int, toRow: Int, toCol: Int) {
-        val srcPiece = getArimaaPiece(fromRow, fromCol) ?: return
-        val destPiece = getArimaaPiece(toRow, toCol)
-        if (destPiece != null) return
+        val from = getArimaaPiece(fromRow, fromCol) ?: return
+        val to = getArimaaPiece(toRow, toCol)
+        if (to != null) return
         setArimaaPiece(fromRow, fromCol, null)
-        setArimaaPiece(toRow, toCol, srcPiece)
+        setArimaaPiece(toRow, toCol, from)
+        TrapPosition()
+        if(EndGame()) endGame=true
 
     }
+
+        private fun TrapPosition() {
+        val trapSequares = arrayOf(
+            Point(2, 2), Point(5, 2), Point(2, 5),
+            Point(5, 5)
+        )
+        for (point in trapSequares) {
+            if (Trap(point)) {
+                val arimaaPiece = getArimaaPiece(point.x, point.y)
+                setArimaaPiece(point.x, point.y, null)
+                arimaaBoard.TrapPosition().add(arimaaPiece)
+            }
+        }
+    }
+
+    private fun Trap(position: Point): Boolean {
+        val arimaaPiece = getArimaaPiece(position.x, position.y) ?: return false
+        for (legalMove in highlightPoint(position.x, position.y)) {
+            val neighbor = getArimaaPiece(legalMove.x, legalMove.y) ?: continue
+            if (arimaaPiece.goldenPlayer == neighbor.goldenPlayer) return false
+        }
+        return true
+    }
+
 
 
     private fun Immobile(currentPiece: ArimaaPiece, Row: Int, Col: Int): Boolean {
@@ -152,13 +195,32 @@ class ArimaaGame(private val arimaaDelegate: ArimaaDelegate) {
             val highlight = getArimaaPiece(point.x, point.y) ?: continue
             if (Immobile(highlight, point.x, point.y)) continue
             if (highlight.goldenPlayer != currentPiece!!.goldenPlayer
-
+                && highlight.rank > currentPiece.rank
             ) {
                 push.add(point)
             }
         }
         return push
     }
+
+    private fun checkBeforePush(Row: Int, Col: Int) {
+        val arimaaPiece = getArimaaPiece(Row, Col)
+        if (arimaaPiece == null) {
+            arimaaDelegate.onError("Please select a piece to use for pushing.")
+        } else {
+            val push = Push(currentPiece)
+            if (!push.contains(Point(Row, Col))) {
+                arimaaDelegate.onError("You cannot push using this piece.")
+            } else {
+                moveArimaaPiece(Row,Col,fromRow,fromCol)
+                numberOfMove--
+                checkBeforePush = false
+                isSelected = false
+                arimaaDelegate.updateBoard()
+            }
+        }
+    }
+
 
 //    fun Pull(currentPiece: ArimaaPiece?): List<Point> {
 //        val pull: MutableList<Point> = ArrayList()
@@ -206,7 +268,48 @@ class ArimaaGame(private val arimaaDelegate: ArimaaDelegate) {
         arimaaDelegate.updateBoard()
     }
 
-    init {
-        boardStates.add(arimaaBoard.State())
+    private fun EndGame(): Boolean {
+        for (row in 0 until 8) {
+            var arimaaPiece = getArimaaPiece(row, 0)
+            if (arimaaPiece != null && arimaaPiece.pieceType == PieceType.Rabbit &&
+                !arimaaPiece.goldenPlayer
+            ) {
+
+                arimaaDelegate.endGame(false)
+                return true
+            }
+            arimaaPiece = getArimaaPiece(row, 7)
+            if (arimaaPiece != null && arimaaPiece.pieceType == PieceType.Rabbit &&
+                arimaaPiece.goldenPlayer
+            ) {
+
+                arimaaDelegate.endGame(true)
+                return true
+            }
+        }
+        var trapGrabbit = 0
+        var trapSrabbit = 0
+        for (arimaaPiece in arimaaBoard.TrapPosition()) {
+            if (arimaaPiece?.pieceType == PieceType.Rabbit) {
+                if (arimaaPiece.goldenPlayer) trapGrabbit++ else trapSrabbit++
+            }
+        }
+        if (GoldPlayer) {
+            if (trapSrabbit == 8) {
+                arimaaDelegate.endGame(true)
+                return true
+            }
+        }
+        if (trapGrabbit == 8) {
+            arimaaDelegate.endGame(false)
+            return true
+        }
+        if (trapSrabbit == 8) {
+            arimaaDelegate.endGame(true)
+            return true
+        }
+        return false
     }
+
+
 }

@@ -10,4 +10,6 @@ interface ArimaaDelegate {
 
     fun updateBoard()
 
+    fun endGame(goldPlayer: Boolean)
+
 }

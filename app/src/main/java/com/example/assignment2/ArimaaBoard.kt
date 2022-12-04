@@ -4,14 +4,13 @@ import java.util.ArrayList
 
 class ArimaaBoard {
     private var arimaaPieces: Array<Array<ArimaaPiece?>?> = Array(8) { arrayOfNulls(8) }
-    private var trappedPieces: MutableList<ArimaaPiece?> = ArrayList()
-    fun getArimaaPieces(): Array<Array<ArimaaPiece?>?> {
-        return arimaaPieces
-    }
+    private var trap: MutableList<ArimaaPiece?> = ArrayList()
 
-    fun State(): BoardState {
-        return BoardState(DeepCopyArimaaPieces(arimaaPieces), DeepCopyTrap(trappedPieces))
-    }
+    fun getArimaaPieces(): Array<Array<ArimaaPiece?>?> = arimaaPieces
+
+
+    fun State(): BoardState = BoardState(DeepCopyArimaaPieces(arimaaPieces), DeepCopyTrap(trap))
+
 
     private fun DeepCopyArimaaPieces(arimaaPieces: Array<Array<ArimaaPiece?>?>?): Array<Array<ArimaaPiece?>?> {
         val copy = Array<Array<ArimaaPiece?>?>(8) { arrayOfNulls(8) }
@@ -23,6 +22,8 @@ class ArimaaBoard {
         }
         return copy
     }
+
+    fun TrapPosition(): MutableList<ArimaaPiece?> = trap
 
     private fun DeepCopyTrap(trap: List<ArimaaPiece?>?): MutableList<ArimaaPiece?> {
         val copy: MutableList<ArimaaPiece?> = ArrayList()

@@ -15,6 +15,7 @@ class MainActivity : AppCompatActivity(),ArimaaDelegate {
     private lateinit var resetButton: Button
     private lateinit var currentPlayer: TextView
     private lateinit var error: TextView
+    private lateinit var winner: TextView
     private lateinit var customView: CustomView
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -26,6 +27,7 @@ class MainActivity : AppCompatActivity(),ArimaaDelegate {
         error = findViewById<TextView>(R.id.error)
         finishTurnButton = findViewById<Button>(R.id.finish_button)
         customView = findViewById<CustomView>(R.id.custom_view)
+        winner = findViewById<TextView>(R.id.Winner)
 
 
         arimaaGame = ArimaaGame(this)
@@ -62,6 +64,11 @@ class MainActivity : AppCompatActivity(),ArimaaDelegate {
 
     override fun showMessage(message: String?) {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+    }
+
+    override fun endGame(goldPlayer: Boolean) {
+        winner.text = if(goldPlayer) "Golden Player Wins" else "Silver Player Wins"
+        finishTurnButton.isEnabled = false
     }
 
 
